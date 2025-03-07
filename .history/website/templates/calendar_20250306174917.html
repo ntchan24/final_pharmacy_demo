@@ -1,0 +1,155 @@
+<!-- templates/calendar.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pharmacy Calendar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ month_name }} {{ year }}</h1>
+            <div class="navigation">
+                {% set prev_month = month - 1 if month > 1 else 12 %}
+                {% set prev_year = year if month > 1 else year - 1 %}
+                {% set next_month = month + 1 if month < 12 else 1 %}
+                {% set next_year = year if month < 12 else year + 1 %}
+                
+                <a href="{{ url_for('views.index', month=prev_month, year=prev_year) }}">&lt; Previous</a>
+                <a href="{{ url_for('views.index', month=next_month, year=next_year) }}">Next &gt;</a>
+            </div>
+            <div class="action-buttons">
+                <a href="{{ url_for('add_patient') }}" class="button primary">Add Patient</a>
+                <a href="{{ url_for('delete_patient') }}" class="button danger">Delete Patient</a>
+                <a href="{{ url_for('add_note') }}" class="button info">Add Note</a>
+            </div>
+        </div>
+
+        <table class="calendar">
+            <tr>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+            </tr>
+            {% for week in calendar %}
+            <tr>
+                {% for day in week %}
+                <td {% if day != 0 %}class="day {% if today == date(year, month, day) %}today{% endif %}"{% endif %}>
+                    {% if day != 0 %}
+                        <div class="day-number">{{ day }}</div>
+                        {% set current_date = date(year, month, day) %}
+                        {% if current_date in prescriptions %}
+                            <div class="prescriptions">
+                                {% for prescription in prescriptions[current_date] %}
+                                    <div class="prescription">
+                                        {% set all_checked = prescription.status and 
+                                            prescription.status.made and 
+                                            prescription.status.checked and 
+                                            (prescription.status.filled if day_of_month >= day else True) %}
+
+                                        <style>
+                                            /* Frequency-based highlighting */
+                                            .highlight-1 {
+                                                background-color: #ffcc66; /* Orange-yellow for weekly */
+                                            }
+                                            .highlight-2 {
+                                                background-color: #90ee90; /* Light green for bi-weekly */
+                                            }
+                                            .highlight-4 {
+                                                background-color: #a7c7e7; /* Light blue for monthly */
+                                            }
+                                            /* Default highlight for any other frequencies */
+                                            .highlight {
+                                                background-color: #e0e0e0; /* Light gray as fallback */
+                                            }   
+                                            .completed {
+                                                text-decoration: line-through;
+                                            }   
+                                        </style>
+
+                                        <span class="highlight-{{ prescription.patient.frequency }}" >
+                                            {{ prescription.patient.name }}
+                                            {% if prescription.patient.notes %}
+                                                <span class="patient-note"> - {{ prescription.patient.notes }} </span>
+
+                                            {% endif %}
+
+                                        </span>
+
+                                        <div class="checkboxes {% if all_checked %}completed{% endif %}">
+
+                                            <label>
+                                                <input type="checkbox" 
+                                                        data-patient="{{ prescription.patient.id }}"
+                                                        data-date="{{ current_date }}"
+                                                        data-type="made"
+                                                        {% if prescription.status and prescription.status.made %}checked{% endif %}>
+                                                Made
+                                            </label>
+                                            <label>
+                                                <input type="checkbox"
+                                                        data-patient="{{ prescription.patient.id }}"
+                                                        data-date="{{ current_date }}"
+                                                        data-type="checked"
+                                                        {% if prescription.status and prescription.status.checked %}checked{% endif %}>
+                                                Checked
+                                            </label>
+                                            {% if day_of_month >= day %}
+                                            <label>
+                                                <input type="checkbox"
+                                                        data-patient="{{ prescription.patient.id }}"
+                                                        data-date="{{ current_date }}"
+                                                        data-type="filled"
+                                                        {% if prescription.status and prescription.status.filled %}checked{% endif %}>
+                                                Filled
+                                            </label>
+                                            {% endif %}
+                                        </div>
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('input[type="checkbox"]').change(function() {
+                const checkbox = $(this);
+                $.post('/update_status', {
+                    patient_id: checkbox.data('patient'),
+                    date: checkbox.data('date'),
+                    status_type: checkbox.data('type'),
+                    checked: checkbox.prop('checked')
+                }).done(function() {
+                    // Check if all checkboxes for this patient are checked
+                    const prescriptionDiv = checkbox.closest('.prescription');
+                    const allChecked = prescriptionDiv.find('input[type="checkbox"]:not(:checked)').length === 0;
+                    
+                    if (allChecked) {
+                        // Add completed class instead of inline CSS
+                        prescriptionDiv.find('span').addClass('completed');
+                        prescriptionDiv.find('.checkboxes').addClass('completed');
+                    } else {
+                        // Remove completed class
+                        prescriptionDiv.find('span').removeClass('completed');
+                        prescriptionDiv.find('.checkboxes').removeClass('completed');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
