@@ -6,115 +6,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* Reset and base styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f7;
-            color: #1d1d1f;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 15px;
-        }
-        
-        /* Header styles - Apple Calendar inspired */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e6e6e6;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            font-weight: 500;
-            color: #1d1d1f;
-        }
-        
-        .navigation {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .navigation a {
-            text-decoration: none;
-            color: #1d1d1f;
-            background-color: #f5f5f7;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        
-        .navigation a:hover {
-            background-color: #e6e6e6;
-        }
-        
-        /* Calendar table styles */
-        .calendar {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-        
-        .calendar th {
-            padding: 10px;
-            text-align: center;
-            font-weight: 500;
-            color: #6e6e73;
-            border-bottom: 1px solid #e6e6e6;
-        }
-        
-        .calendar td {
-            height: 120px;
-            vertical-align: top;
-            border: 1px solid #e6e6e6;
-            padding: 8px;
-        }
-        
-        .calendar td.day {
-            background-color: #ffffff;
-        }
-        
-        .calendar td.today {
-            background-color: #f7f7fa;
-            box-shadow: inset 0 0 0 2px #0071e3;
-        }
-        
-        .day-number {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-        
-        td.today .day-number {
-            color: #0071e3;
-            font-weight: 600;
-        }
-        
-        /* User section */
+        /* Additional styles for the user info and logout button */
         .user-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
             margin-bottom: 10px;
-            border-bottom: 1px solid #e6e6e6;
+            border-bottom: 1px solid #eee;
         }
         
         .user-info {
@@ -123,139 +22,28 @@
         }
         
         .user-name {
-            font-weight: 600;
+            font-weight: bold;
             margin-right: 10px;
-            color: #1d1d1f;
         }
         
         .user-role {
-            color: #6e6e73;
-            font-style: normal;
+            color: #666;
+            font-style: italic;
         }
         
         .logout-button {
-            background-color: #f5f5f7;
-            color: #1d1d1f;
+            background-color: #f44336;
+            color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
             font-size: 14px;
-            transition: background-color 0.2s;
         }
         
         .logout-button:hover {
-            background-color: #e6e6e6;
-        }
-        
-        /* Action buttons */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .button {
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        
-        .primary {
-            background-color: #0071e3;
-            color: white;
-        }
-        
-        .primary:hover {
-            background-color: #0062c2;
-        }
-        
-        .danger {
-            background-color: #ff3b30;
-            color: white;
-        }
-        
-        .danger:hover {
-            background-color: #e53027;
-        }
-        
-        .info {
-            background-color: #5ac8fa;
-            color: white;
-        }
-        
-        .info:hover {
-            background-color: #48b0df;
-        }
-        
-        /* Prescription styles */
-        .prescriptions {
-            margin-top: 5px;
-        }
-        
-        .prescription {
-            background-color: #f5f5f7;
-            border-radius: 6px;
-            padding: 6px;
-            margin-bottom: 5px;
-            font-size: 13px;
-        }
-        
-        .checkboxes {
-            margin-top: 4px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        
-        .checkboxes label {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-            color: #6e6e73;
-            margin-right: 4px;
-        }
-        
-        .checkboxes input[type="checkbox"] {
-            margin-right: 3px;
-        }
-        
-        /* Frequency-based highlighting */
-        .highlight-1 {
-            background-color: #ffcc66; /* Orange-yellow for weekly */
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-        
-        .highlight-2 {
-            background-color: #90ee90; /* Light green for bi-weekly */
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-        
-        .highlight-4 {
-            background-color: #a7c7e7; /* Light blue for monthly */
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-        
-        .highlight {
-            background-color: #e0e0e0; /* Light gray as fallback */
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-        
-        .completed {
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
-        
-        .patient-note {
-            font-style: italic;
-            font-size: 11px;
+            background-color: #d32f2f;
         }
     </style>
 </head>
@@ -313,6 +101,26 @@
                                             prescription.status.made and 
                                             prescription.status.checked and 
                                             (prescription.status.filled if day_of_month >= day else True) %}
+
+                                        <style>
+                                            /* Frequency-based highlighting */
+                                            .highlight-1 {
+                                                background-color: #ffcc66; /* Orange-yellow for weekly */
+                                            }
+                                            .highlight-2 {
+                                                background-color: #90ee90; /* Light green for bi-weekly */
+                                            }
+                                            .highlight-4 {
+                                                background-color: #a7c7e7; /* Light blue for monthly */
+                                            }
+                                            /* Default highlight for any other frequencies */
+                                            .highlight {
+                                                background-color: #e0e0e0; /* Light gray as fallback */
+                                            }   
+                                            .completed {
+                                                text-decoration: line-through;
+                                            }   
+                                        </style>
 
                                         <span class="highlight-{{ prescription.patient.frequency }}" >
                                             {{ prescription.patient.name }}
