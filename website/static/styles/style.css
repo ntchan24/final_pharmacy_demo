@@ -1,8 +1,9 @@
 /* static/style.css */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    padding: 10px;
+    width: 100vw;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .header {

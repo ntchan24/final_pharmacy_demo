@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, make_response, jsonify
 from datetime import datetime, date
 import calendar
 from .models import Patient, CheckStatus
@@ -43,7 +43,7 @@ def index():
                             'status': check_status or None
                         })
 
-    return render_template('calendar.html',
+    response = make_response(render_template('calendar.html',
                          calendar=cal,
                          month=month,
                          year=year,
@@ -53,7 +53,12 @@ def index():
                          day_of_month=today.day,
                          date=date,
                          user=current_user
-                        )
+                        ))
+    # Add cache control headers
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @views.route('/add_patient', methods=['GET', 'POST'])
 @login_required
@@ -64,8 +69,13 @@ def add_patient():
         start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d')
         
         patient = Patient(name=name, frequency=frequency, start_date=start_date)
-        db.session.add(patient)
-        db.session.commit()
+        try:
+            db.session.add(patient)
+            db.session.commit()
+            db.session.refresh(patient)
+        except:
+            db.session.rollback()
+            raise
         
         return redirect(url_for('views.index'))
     return render_template('add_patient.html', user=current_user)
@@ -78,8 +88,12 @@ def delete_patient():
         if patient_id:
             patient = Patient.query.get(patient_id)
             if patient:
-                db.session.delete(patient)
-                db.session.commit()
+                try:
+                    db.session.delete(patient)
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+                    raise
         return redirect(url_for('views.index'))
     
     patients = Patient.query.all()
@@ -119,3 +133,63 @@ def add_note():
             return redirect(url_for('views.index'))
     patients = Patient.query.all()
     return render_template('add_note.html', patients=patients, user=current_user)
+
+@views.route('/manage_notes')
+@login_required
+def manage_notes():
+    # Only get patients that have notes
+    patients = Patient.query.filter(Patient.notes.isnot(None)).all()
+    return render_template('manage_notes.html', patients=patients, user=current_user)
+
+@views.route('/edit_note/<int:patient_id>', methods=['POST'])
+@login_required
+def edit_note(patient_id):
+    try:
+        data = request.get_json()
+        patient = Patient.query.get_or_404(patient_id)
+        patient.notes = data.get('note', '')
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@views.route('/delete_note/<int:patient_id>', methods=['POST'])
+@login_required
+def delete_note(patient_id):
+    try:
+        patient = Patient.query.get_or_404(patient_id)
+        patient.notes = None
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@views.route('/edit_start_date/<int:patient_id>', methods=['GET', 'POST'])
+@login_required
+def edit_start_date(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    
+    if request.method == 'POST':
+        try:
+            new_start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d')
+            new_frequency = int(request.form['frequency'])
+            
+            # Only delete check statuses if either start date or frequency changed
+            if new_start_date != patient.start_date or new_frequency != patient.frequency:
+                # Delete all existing check statuses for this patient
+                CheckStatus.query.filter_by(patient_id=patient.id).delete()
+                
+                # Update the patient's start date and frequency
+                patient.start_date = new_start_date
+                patient.frequency = new_frequency
+                db.session.commit()
+            
+            return redirect(url_for('views.index'))
+        except Exception as e:
+            db.session.rollback()
+            # You might want to add proper error handling here
+            return redirect(url_for('views.index'))
+    
+    return render_template('edit_start_date.html', patient=patient, user=current_user)

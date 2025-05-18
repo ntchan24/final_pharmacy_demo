@@ -19,15 +19,6 @@
             color: #1d1d1f;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 15px;
-        }
-        
         /* Header styles - Apple Calendar inspired */
         .header {
             display: flex;
@@ -126,6 +117,7 @@
             font-weight: 600;
             margin-right: 10px;
             color: #1d1d1f;
+            margin-left: 2em;
         }
         
         .user-role {
@@ -204,6 +196,28 @@
             font-size: 13px;
         }
         
+        .prescription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .prescription-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .prescription-actions a {
+            font-size: 11px;
+            color: #0071e3;
+            text-decoration: none;
+        }
+        
+        .prescription-actions a:hover {
+            text-decoration: underline;
+        }
+        
         .checkboxes {
             margin-top: 4px;
             display: flex;
@@ -264,8 +278,8 @@
         <!-- Add user info and logout button at the top -->
         <div class="user-section">
             <div class="user-info">
-                <span class="user-name">{{ user.full_name }}</span>
-                <span class="user-role">{{ user.role }}</span>
+                        <span class="user-name">{{ user.full_name }}</span>
+                        <span class="user-role">{{ user.role }}</span>
             </div>
             <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
         </div>
@@ -285,6 +299,7 @@
                 <a href="{{ url_for('views.add_patient') }}" class="button primary">Add Patient</a>
                 <a href="{{ url_for('views.delete_patient') }}" class="button danger">Delete Patient</a>
                 <a href="{{ url_for('views.add_note') }}" class="button info">Add Note</a>
+                <a href="{{ url_for('views.manage_notes') }}" class="button info">Manage Notes</a>
             </div>
         </div>
 
@@ -309,50 +324,40 @@
                             <div class="prescriptions">
                                 {% for prescription in prescriptions[current_date] %}
                                     <div class="prescription">
-                                        {% set all_checked = prescription.status and 
-                                            prescription.status.made and 
-                                            prescription.status.checked and 
-                                            (prescription.status.filled if day_of_month >= day else True) %}
-
-                                        <span class="highlight-{{ prescription.patient.frequency }}" >
-                                            {{ prescription.patient.name }}
-                                            {% if prescription.patient.notes %}
-                                                <span class="patient-note"> - {{ prescription.patient.notes }} </span>
-
-                                            {% endif %}
-
-                                        </span>
-
-                                        <div class="checkboxes {% if all_checked %}completed{% endif %}">
-
+                                        <div class="prescription-header">
+                                            <span class="highlight-{{ prescription.patient.frequency }}">
+                                                {{ prescription.patient.name }}
+                                            </span>
+                                            <div class="prescription-actions">
+                                                <a href="{{ url_for('views.edit_start_date', patient_id=prescription.patient.id) }}" title="Edit Start Date">Edit Date</a>
+                                            </div>
+                                        </div>
+                                        <div class="checkboxes {% if prescription.status and prescription.status.made and prescription.status.checked and (prescription.status.filled if day_of_month >= day else True) %}completed{% endif %}">
                                             <label>
-                                                <input type="checkbox" 
-                                                        data-patient="{{ prescription.patient.id }}"
-                                                        data-date="{{ current_date }}"
-                                                        data-type="made"
-                                                        {% if prescription.status and prescription.status.made %}checked{% endif %}>
+                                                <input type="checkbox" class="status-checkbox" 
+                                                       data-patient-id="{{ prescription.patient.id }}"
+                                                       data-date="{{ current_date.strftime('%Y-%m-%d') }}"
+                                                       data-status-type="made"
+                                                       {% if prescription.status and prescription.status.made %}checked{% endif %}>
                                                 Made
                                             </label>
                                             <label>
-                                                <input type="checkbox"
-                                                        data-patient="{{ prescription.patient.id }}"
-                                                        data-date="{{ current_date }}"
-                                                        data-type="checked"
-                                                        {% if prescription.status and prescription.status.checked %}checked{% endif %}>
+                                                <input type="checkbox" class="status-checkbox"
+                                                       data-patient-id="{{ prescription.patient.id }}"
+                                                       data-date="{{ current_date.strftime('%Y-%m-%d') }}"
+                                                       data-status-type="checked"
+                                                       {% if prescription.status and prescription.status.checked %}checked{% endif %}>
                                                 Checked
                                             </label>
-                                            {% if day_of_month >= day %}
                                             <label>
-                                                <input type="checkbox"
-                                                        data-patient="{{ prescription.patient.id }}"
-                                                        data-date="{{ current_date }}"
-                                                        data-type="filled"
-                                                        {% if prescription.status and prescription.status.filled %}checked{% endif %}>
+                                                <input type="checkbox" class="status-checkbox"
+                                                       data-patient-id="{{ prescription.patient.id }}"
+                                                       data-date="{{ current_date.strftime('%Y-%m-%d') }}"
+                                                       data-status-type="filled"
+                                                       {% if prescription.status and prescription.status.filled %}checked{% endif %}>
                                                 Filled
                                             </label>
-                                            {% endif %}
                                         </div>
-
                                     </div>
                                 {% endfor %}
                             </div>
@@ -366,13 +371,18 @@
     </div>
 
     <script>
+        // Force refresh when coming back to the page
+        if (performance.navigation.type === 2) {
+            location.reload(true);
+        }
+
         $(document).ready(function() {
             $('input[type="checkbox"]').change(function() {
                 const checkbox = $(this);
                 $.post('/update_status', {
-                    patient_id: checkbox.data('patient'),
+                    patient_id: checkbox.data('patient_id'),
                     date: checkbox.data('date'),
-                    status_type: checkbox.data('type'),
+                    status_type: checkbox.data('status_type'),
                     checked: checkbox.prop('checked')
                 }).done(function() {
                     // Check if all checkboxes for this patient are checked
