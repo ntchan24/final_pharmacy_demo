@@ -327,6 +327,9 @@
                                         <div class="prescription-header">
                                             <span class="highlight-{{ prescription.patient.frequency }}">
                                                 {{ prescription.patient.name }}
+                                                {% if prescription.patient.notes %}
+                                                <span class="patient-note">({{ prescription.patient.notes }})</span>
+                                                {% endif %}
                                             </span>
                                             <div class="prescription-actions">
                                                 <a href="{{ url_for('views.edit_start_date', patient_id=prescription.patient.id) }}" title="Edit Start Date">Edit Date</a>
