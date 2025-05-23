@@ -272,6 +272,19 @@
             font-style: italic;
             font-size: 11px;
         }
+        .fixed-div {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background-color: white; /* optional: add background */
+            padding: 10px; /* optional: add some padding */
+        }
+        
+        body {
+            padding-top: 60px; /* adjust to match your fixed div's height */
+        }
     </style>
 </head>
 <body>
@@ -285,7 +298,7 @@
             <a href="{{ url_for('auth.logout') }}" class="logout-button">Logout</a>
         </div>
     
-        <div class="header">
+        <div class="header fixed-div">
             <h1>{{ month_name }} {{ year }}</h1>
             <div class="navigation">
                 {% set prev_month = month - 1 if month > 1 else 12 %}
