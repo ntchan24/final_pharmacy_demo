@@ -102,23 +102,28 @@ def delete_patient():
 @views.route('/update_status', methods=['POST'])
 @login_required
 def update_status():
-    patient_id = request.form['patient_id']
-    date_str = request.form['date']
-    status_type = request.form['status_type']
-    checked = request.form['checked'] == 'true'
-    
-    current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    
-    status = CheckStatus.query.filter_by(patient_id=patient_id, date=current_date).first()
-    
-    if not status:
-        status = CheckStatus(patient_id=patient_id, date=current_date)
-        db.session.add(status)
-    
-    setattr(status, status_type, checked)
-    db.session.commit()
-    
-    return 'OK'
+    try:
+        patient_id = request.form['patient_id']
+        date_str = request.form['date']
+        status_type = request.form['status_type']
+        checked = request.form['checked'] == 'true'
+        
+        current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        status = CheckStatus.query.filter_by(patient_id=patient_id, date=current_date).first()
+        
+        if not status:
+            status = CheckStatus(patient_id=patient_id, date=current_date)
+            db.session.add(status)
+        
+        setattr(status, status_type, checked)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating status: {str(e)}")  # This will show in Heroku logs
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @views.route('/add_note', methods=['GET', 'POST'])
 @login_required

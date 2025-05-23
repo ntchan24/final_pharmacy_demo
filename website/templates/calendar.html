@@ -5,6 +5,7 @@
     <title>Pharmacy Calendar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
         /* Reset and base styles */
         * {
@@ -387,7 +388,8 @@
                     date: checkbox.data('date'),
                     status_type: checkbox.data('status_type'),
                     checked: checkbox.prop('checked')
-                }).done(function() {
+                })
+                .done(function() {
                     // Check if all checkboxes for this patient are checked
                     const prescriptionDiv = checkbox.closest('.prescription');
                     const allChecked = prescriptionDiv.find('input[type="checkbox"]:not(:checked)').length === 0;
@@ -401,6 +403,12 @@
                         prescriptionDiv.find('span').removeClass('completed');
                         prescriptionDiv.find('.checkboxes').removeClass('completed');
                     }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Failed to update status:', textStatus, errorThrown);
+                    // Revert the checkbox state
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    alert('Failed to update status. Please try again.');
                 });
             });
         });
