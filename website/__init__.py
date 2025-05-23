@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from os import path
+from os import path, environ
 from flask_login import LoginManager
 
 db = SQLAlchemy()
@@ -8,8 +8,16 @@ DB_NAME = "pharmacy.db"
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs'  # Replace with a secure key in production
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SECRET_KEY'] = environ.get('FLASK_SECRET_KEY', 'dev-key-for-development-only')
+    
+    # Configure database URI based on environment
+    if environ.get('DATABASE_URL'):
+        # Heroku PostgreSQL
+        app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
+    else:
+        # Local SQLite
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    
     db.init_app(app)
 
     from .views import views
@@ -23,7 +31,7 @@ def create_app():
     create_database(app)
     
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'  # Where to redirect if not logged in
+    login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
     
     @login_manager.user_loader
