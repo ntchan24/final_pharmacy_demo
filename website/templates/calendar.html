@@ -383,32 +383,37 @@
         $(document).ready(function() {
             $('input[type="checkbox"]').change(function() {
                 const checkbox = $(this);
-                $.post('/update_status', {
-                    patient_id: checkbox.data('patient_id'),
-                    date: checkbox.data('date'),
-                    status_type: checkbox.data('status_type'),
-                    checked: checkbox.prop('checked')
-                })
-                .done(function() {
-                    // Check if all checkboxes for this patient are checked
-                    const prescriptionDiv = checkbox.closest('.prescription');
-                    const allChecked = prescriptionDiv.find('input[type="checkbox"]:not(:checked)').length === 0;
-                    
-                    if (allChecked) {
-                        // Add completed class instead of inline CSS
-                        prescriptionDiv.find('span').addClass('completed');
-                        prescriptionDiv.find('.checkboxes').addClass('completed');
-                    } else {
-                        // Remove completed class
-                        prescriptionDiv.find('span').removeClass('completed');
-                        prescriptionDiv.find('.checkboxes').removeClass('completed');
+                $.ajax({
+                    url: '/update_status',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        patient_id: checkbox.data('patient_id'),
+                        date: checkbox.data('date'),
+                        status_type: checkbox.data('status_type'),
+                        checked: checkbox.prop('checked')
+                    }),
+                    success: function(response) {
+                        // Check if all checkboxes for this patient are checked
+                        const prescriptionDiv = checkbox.closest('.prescription');
+                        const allChecked = prescriptionDiv.find('input[type="checkbox"]:not(:checked)').length === 0;
+                        
+                        if (allChecked) {
+                            // Add completed class instead of inline CSS
+                            prescriptionDiv.find('span').addClass('completed');
+                            prescriptionDiv.find('.checkboxes').addClass('completed');
+                        } else {
+                            // Remove completed class
+                            prescriptionDiv.find('span').removeClass('completed');
+                            prescriptionDiv.find('.checkboxes').removeClass('completed');
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Failed to update status:', textStatus, errorThrown);
+                        // Revert the checkbox state
+                        checkbox.prop('checked', !checkbox.prop('checked'));
+                        alert('Failed to update status. Please try again.');
                     }
-                })
-                .fail(function(jqXHR, textStatus, errorThrown) {
-                    console.error('Failed to update status:', textStatus, errorThrown);
-                    // Revert the checkbox state
-                    checkbox.prop('checked', !checkbox.prop('checked'));
-                    alert('Failed to update status. Please try again.');
                 });
             });
         });

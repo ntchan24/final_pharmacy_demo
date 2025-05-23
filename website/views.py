@@ -103,6 +103,7 @@ def delete_patient():
 @login_required
 def update_status():
     try:
+        print(f"Received update_status request with form data: {request.form}") # Log form data
         patient_id = request.form['patient_id']
         date_str = request.form['date']
         status_type = request.form['status_type']
