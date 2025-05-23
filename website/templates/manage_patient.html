@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Delete Patient</title>
+    <title>Manage Patient</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         /* Reset and base styles */
@@ -34,7 +34,7 @@
             text-align: center;
         }
         
-        .delete-patient-form {
+        .manage-patient-form {
             margin-top: 20px;
         }
         
@@ -50,7 +50,7 @@
             color: #6e6e73;
         }
         
-        select {
+        select, input[type="text"] {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -61,7 +61,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         
-        select:focus {
+        select:focus, input[type="text"]:focus {
             outline: none;
             border-color: #0071e3;
             box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
@@ -86,6 +86,15 @@
             text-align: center;
         }
         
+        .primary {
+            background-color: #0071e3;
+            color: white;
+        }
+        
+        .primary:hover {
+            background-color: #0062c2;
+        }
+
         .danger {
             background-color: #ff3b30;
             color: white;
@@ -95,34 +104,57 @@
             background-color: #e53027;
         }
         
-        .button:not(.danger) {
+        .button:not(.primary):not(.danger) {
             background-color: #f5f5f7;
             color: #1d1d1f;
         }
         
-        .button:not(.danger):hover {
+        .button:not(.primary):not(.danger):hover {
             background-color: #e6e6e6;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Delete Patient</h1>
-        <form method="POST" class="delete-patient-form">
+        <h1>Manage Patient</h1>
+        <form method="POST" class="manage-patient-form" id="managePatientForm">
             <div class="form-group">
-                <label for="patient_id">Select Patient to Delete:</label>
+                <label for="patient_id">Select Patient:</label>
                 <select id="patient_id" name="patient_id" required>
                     {% for patient in patients %}
                         <option value="{{ patient.id }}">{{ patient.name }}</option>
                     {% endfor %}
                 </select>
             </div>
+
+            <div class="form-group">
+                <label for="name">New Patient Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
             
             <div class="form-actions">
                 <a href="{{ url_for('views.index') }}" class="button">Back to Calendar</a>
-                <button type="submit" class="button danger">Delete Patient</button>
+                <button type="submit" class="button primary" name="action" value="update">Update Patient Name</button>
+                <button type="button" class="button danger" onclick="confirmDelete()">Delete Patient</button>
             </div>
         </form>
     </div>
+
+    <script>
+        function confirmDelete() {
+            const patientSelect = document.getElementById('patient_id');
+            const patientName = patientSelect.options[patientSelect.selectedIndex].text;
+            
+            if (confirm(`Are you sure you want to delete ${patientName}? This action cannot be undone.`)) {
+                const form = document.getElementById('managePatientForm');
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete';
+                form.appendChild(actionInput);
+                form.submit();
+            }
+        }
+    </script>
 </body>
-</html>
+</html> 

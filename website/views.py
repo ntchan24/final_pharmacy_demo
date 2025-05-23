@@ -80,24 +80,32 @@ def add_patient():
         return redirect(url_for('views.index'))
     return render_template('add_patient.html', user=current_user)
 
-@views.route('/delete_patient', methods=['GET', 'POST'])
+@views.route('/manage_patient', methods=['GET', 'POST'])
 @login_required
-def delete_patient():
+def manage_patient():
     if request.method == 'POST':
         patient_id = request.form.get('patient_id')
+        action = request.form.get('action')
+        
         if patient_id:
             patient = Patient.query.get(patient_id)
             if patient:
                 try:
-                    db.session.delete(patient)
-                    db.session.commit()
+                    if action == 'update':
+                        name = request.form.get('name')
+                        if name:
+                            patient.name = name
+                            db.session.commit()
+                    elif action == 'delete':
+                        db.session.delete(patient)
+                        db.session.commit()
                 except:
                     db.session.rollback()
                     raise
         return redirect(url_for('views.index'))
     
     patients = Patient.query.all()
-    return render_template('delete_patient.html', patients=patients, user=current_user)
+    return render_template('manage_patient.html', patients=patients, user=current_user)
 
 @views.route('/update_status', methods=['POST'])
 @login_required
