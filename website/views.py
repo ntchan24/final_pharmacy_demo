@@ -103,12 +103,12 @@ def delete_patient():
 @login_required
 def update_status():
     try:
-        print(f"Received update_status request with form data: {request.form}") # Log form data
-        patient_id = request.form['patient_id']
-        date_str = request.form['date']
-        status_type = request.form['status_type']
-        checked = request.form['checked'] == 'true'
-        
+        data = request.get_json()
+        patient_id = data['patient_id']
+        date_str = data['date']
+        status_type = data['status_type']
+        checked = data['checked']
+
         current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         
         status = CheckStatus.query.filter_by(patient_id=patient_id, date=current_date).first()
