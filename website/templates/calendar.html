@@ -383,12 +383,14 @@
         $(document).ready(function() {
             $('input[type="checkbox"]').change(function() {
                 const checkbox = $(this);
-                $.post('/update_status', {
+                const updateData = {
                     patient_id: checkbox.attr('data-patient-id'),
                     date: checkbox.data('date'),
                     status_type: checkbox.attr('data-status-type'),
                     checked: checkbox.prop('checked')
-                })
+                };
+                console.log('Sending update status data:', updateData);
+                $.post('/update_status', updateData)
                 .done(function() {
                     // Check if all checkboxes for this patient are checked
                     const prescriptionDiv = checkbox.closest('.prescription');
