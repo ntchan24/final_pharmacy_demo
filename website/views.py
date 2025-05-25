@@ -14,8 +14,26 @@ def index():
     year = request.args.get('year', today.year, type=int)
     month = request.args.get('month', today.month, type=int)
     
+    # Get the calendar for current month
     cal = calendar.monthcalendar(year, month)
     month_name = calendar.month_name[month]
+
+    # Calculate next month and year
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+
+    # Get the last week of the current month
+    last_week = cal[-1]
+    
+    # If the last week is incomplete (has zeros), fill it with next month's days
+    if 0 in last_week:
+        next_month_cal = calendar.monthcalendar(next_year, next_month)
+        next_month_days = next_month_cal[0]  # Get first week of next month
+        
+        # Replace zeros in last week with next month's days
+        for i in range(len(last_week)):
+            if last_week[i] == 0:
+                last_week[i] = next_month_days[i]
 
     patients = Patient.query.all()
     prescriptions = {}
@@ -23,7 +41,17 @@ def index():
     for week in cal:
         for day in week:
             if day != 0:
-                current_date = date(year, month, day)
+                # Determine if this is a current month or next month day
+                current_month = month
+                current_year = year
+                
+                # If we're in the last week and the day is less than the first day of that week,
+                # it's from the next month
+                if week == cal[-1] and day < week[0]:
+                    current_month = next_month
+                    current_year = next_year
+                
+                current_date = date(current_year, current_month, day)
                 prescriptions[current_date] = []
 
                 for patient in patients:

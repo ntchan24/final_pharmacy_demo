@@ -82,6 +82,10 @@
             background-color: #ffffff;
         }
         
+        .calendar td.next-month {
+            background-color: #fafafa;
+        }
+        
         .calendar td.today {
             background-color: #f7f7fa;
             box-shadow: inset 0 0 0 2px #0071e3;
@@ -92,6 +96,10 @@
             font-weight: 500;
             margin-bottom: 8px;
             color: #1d1d1f;
+        }
+        
+        .next-month .day-number {
+            color: #8e8e93;
         }
         
         td.today .day-number {
@@ -330,10 +338,13 @@
             {% for week in calendar %}
             <tr>
                 {% for day in week %}
-                <td {% if day != 0 %}class="day {% if today == date(year, month, day) %}today{% endif %}"{% endif %}>
+                <td {% if day != 0 %}class="day {% if week == calendar[-1] and day < week[0] %}next-month{% endif %} {% if today == date(year, month, day) %}today{% endif %}"{% endif %}>
                     {% if day != 0 %}
                         <div class="day-number">{{ day }}</div>
                         {% set current_date = date(year, month, day) %}
+                        {% if week == calendar[-1] and day < week[0] %}
+                            {% set current_date = date(next_year, next_month, day) %}
+                        {% endif %}
                         {% if current_date in prescriptions %}
                             <div class="prescriptions">
                                 {% for prescription in prescriptions[current_date] %}
